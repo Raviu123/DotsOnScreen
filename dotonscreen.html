@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World!</title>
+  </head>
+  <body>
+    <div style="width:400px">
+      <div style="display:flex; justify-content:center; align-items:center ;">
+        <button type="submit" id="undo" onclick="undo()">Undo</button>
+         <button type="submit" id="redo" onclick="redo()">Redo</button>
+      </div>
+      <div>
+        <canvas id="canvas" width="400px" height="400px" style="border:solid 1px black">
+          
+        </canvas>
+      </div>
+    </div>
+      
+      <script>
+         class Stack {
+      constructor() {
+        this.items = [];
+      }
+
+      push(element) {
+        this.items.push(element);
+      }
+
+      pop() {
+        return this.items.pop();
+      }
+
+      peek() {
+        return this.items[this.items.length - 1];
+      }
+
+      isEmpty() {
+        return this.items.length === 0;
+      }
+
+      size() {
+        return this.items.length;
+      }
+
+      getItems() {
+        return [...this.items];
+      }
+
+      clear() {
+        this.items = [];
+      }
+    }
+
+    const canvasElem = document.getElementById("canvas");
+    const ctx = canvasElem.getContext("2d");
+
+    const undoStack = new Stack(); // stores current points
+    const redoStack = new Stack(); // stores undone points
+
+    function drawDot(x, y) {
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = "black";
+      ctx.fill();
+    }
+
+    function displayDots() {
+      ctx.clearRect(0, 0, canvasElem.width, canvasElem.height);
+      const dots = undoStack.getItems();
+      for (const { x, y } of dots) {
+        drawDot(x, y);
+      }
+    }
+
+    function getMousePosition(canvas, event) {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      const point = { x, y };
+      undoStack.push(point);
+      redoStack.clear(); // once new point is added, redo history is invalid
+      displayDots();
+    }
+
+    canvasElem.addEventListener("mousedown", function (e) {
+      getMousePosition(canvasElem, e);
+    });
+
+    function undo() {
+      if (!undoStack.isEmpty()) {
+        const removed = undoStack.pop();
+        redoStack.push(removed);
+        displayDots();
+      }
+    }
+
+    function redo() {
+      if (!redoStack.isEmpty()) {
+        const restored = redoStack.pop();
+        undoStack.push(restored);
+        displayDots();
+      }
+    }
+      </script>
+  </body>
+  <style type="text/css" media="all">
+    body{
+      padding: 25px;
+    }
+    .title {
+    	color: #5C6AC4;
+    }
+  </style>
+</html>
